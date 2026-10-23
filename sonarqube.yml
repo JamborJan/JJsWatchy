@@ -1,0 +1,42 @@
+
+#
+# Summary: pipeline for running SonarQube analysis and publishing results
+#
+
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+
+resources:
+  repositories:
+    - repository: ci-central
+      name: JJsProjects/CiCentral
+      type: git
+      ref: main
+
+pool:
+  name: jjspool
+  demands:
+  - Agent.OS -equals Linux
+
+steps:
+  - task: bash@3
+    displayName: Set up SonarQube
+    inputs:
+      targetType: 'inline'
+      script: |
+        curl 'https://sq.watt.jambor.pro/static/cpp/build-wrapper-linux-x86.zip' --output build-wrapper.zip
+        unzip build-wrapper.zip
+  # - task: bash@3
+  #   displayName: Run build
+  #   inputs:
+  #     targetType: 'inline'
+  #     script: |
+  #       ./build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-output <your build command here>
+  - template: ci-templates/sonarqube/sonarqube-prepare.yaml@ci-central
+    parameters:
+      context: ''
+      cliProjectKey: 'JJsProjects_JJsWatchy_AYsqf9mFS2yyHmbITSL0'
+  - template: ci-templates/sonarqube/sonarqube-analyze-publish.yaml@ci-central
